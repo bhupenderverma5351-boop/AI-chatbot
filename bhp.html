@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gemini Designer Chatbot</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9f9f9;
+      padding: 40px;
+      text-align: center;
+    }
+
+    #chatbox {
+      background: #fff;
+      border-radius: 12px;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px 30px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .message {
+      font-size: 18px;
+      text-align: left;
+      white-space: pre-wrap;
+      color: #333;
+      margin-top: 20px;
+    }
+
+    .typing {
+      border-right: .1em solid #333;
+      animation: blink 0.7s steps(1) infinite;
+    }
+
+    @keyframes blink {
+      from { border-color: transparent }
+      to { border-color: black }
+    }
+
+    textarea {
+      width: 100%;
+      height: 80px;
+      font-size: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      resize: vertical;
+      margin-top: 10px;
+      box-sizing: border-box;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 12px 24px;
+      font-size: 16px;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #357ab8;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="chatbox">
+    <h2>Gemini Chatbot</h2>
+    <textarea id="userInput" placeholder="Ask something..."></textarea>
+    <button onclick="askGemini()">Ask Gemini</button>
+    <div class="message" id="response"></div>
+  </div>
+
+  <script>
+    const API_KEY = "AIzaSyDipipTjz78Ib93E5eUoflHkxP5se1bEpE";
+    const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+
+    async function askGemini() {
+      const userInput = document.getElementById('userInput').value.trim();
+      const responseDiv = document.getElementById('response');
+
+      if (!userInput) {
+        responseDiv.textContent = "Please enter a question.";
+        return;
+      }
+
+      responseDiv.innerHTML = "Typing...";
+
+      try {
+        const res = await fetch(endpoint + `?key=${API_KEY}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [{ text: userInput }]
+              }
+            ]
+          })
+        });
+
+        const data = await res.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response from Gemini.";
+        typeEffect(text, responseDiv);
+      } catch (error) {
+        responseDiv.textContent = "Error: " + error.message;
+      }
+    }
+
+    function typeEffect(text, element, delay = 30) {
+      let index = 0;
+      element.innerHTML = '<span class="typing"></span>';
+      const typingSpan = element.querySelector('.typing');
+
+      function typeChar() {
+        if (index < text.length) {
+          typingSpan.textContent += text.charAt(index);
+          index++;
+          setTimeout(typeChar, delay);
+        } else {
+          typingSpan.classList.remove('typing');
+        }
+      }
+
+      typeChar();
+    }
+  </script>
+
+</body>
+</html>
